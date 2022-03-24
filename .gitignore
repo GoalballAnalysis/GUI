@@ -1,0 +1,16 @@
+*.mp4
+
+*.pt
+
+*.png
+
+/venv/
+/gui/
+/gui_env/
+
+
+*/*.mp4
+
+*.zip
+
+__pycache__
