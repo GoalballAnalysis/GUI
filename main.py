@@ -20,6 +20,7 @@ from forms.stats_form  import Ui_StatisticWindow
 from workers.worker1 import Worker1
 from PyQt5 import QtGui
 import cv2
+from time import sleep
 
 
 #ToDo
@@ -29,6 +30,7 @@ import cv2
 
 # reverse of image size
 IMAGE_SIZE = (1280, 720)
+GIF_SIZE = (150,150)
 
 class VideoScreen(QMainWindow):
     __instance = None
@@ -70,6 +72,18 @@ class VideoScreen(QMainWindow):
         checkBox = self.findChild(QCheckBox)
         checkBox.move(checkBox.x()+x_movement, checkBox.y())
 
+
+        #stylesheet
+        self.setStyleSheet(
+            """
+            QLabel {
+                opacity:0.1;
+                border-radius:3px;
+                border: 2px solid black;
+            }
+            """
+        )
+
     #mouse click
     def mousePressEvent(self, event):
         if self.FeedLabel.pixmap() and (event.button() == QtCore.Qt.LeftButton):
@@ -108,11 +122,44 @@ class VideoScreen(QMainWindow):
             cv2.line(image, self.courtPoints[0], self.courtPoints[3], color, 2)
         return image
 
+    def openVideo(self):
+        self.initLoadingGif()
+        self.startVideoWorker()
+        
+    def initLoadingGif(self):
+        self.loading = QMovie("loading.gif")
+        
+        #resize qlabel
+        self.FeedLabel.setMovie(self.loading)
+        self.FeedLabel.resize(*GIF_SIZE)
+        self.FeedLabel.setAlignment(Qt.AlignCenter)
+        
+        #start gif
+        self.loading.start()
+        self.loading.setScaledSize(QSize(*GIF_SIZE))
+
+    def startLoadingGif(self):
+        # start gif
+        if self.loading.state()==0:
+            self.loading.start()
+        else:
+            pass
+
+    def stopLoadingGif(self):
+        if self.loading.state()==2:
+            self.FeedLabel.resize(*IMAGE_SIZE)
+            self.loading.stop()
+        else:
+            pass
+
     def startVideoWorker(self):
-        self.Worker1 = Worker1(self.videoPath)
+        self.Worker1 = Worker1(self.videoPath, self)
         self.Worker1.start()
         self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
         self.Worker1.ResetContent.connect(self.resetContent)
+        self.Worker1.StartLoading.connect(self.startLoadingGif)
+        self.Worker1.StopLoading.connect(self.stopLoadingGif)
+
         
     def ImageUpdateSlot(self, frame):
         # draw court lines

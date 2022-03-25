@@ -6,16 +6,20 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import TrackerUtil.utils as tracker_utils
 import tracker.track as track
-from time import time
+from time import time, sleep
 import numpy as np
 
 class Worker1(QThread):
-    def __init__(self, videoPath):
+    def __init__(self, videoPath, MainWindow):
         super().__init__()
+        self.MainWindow=MainWindow
         self.tracker, self.cap = tracker_utils.open_video(videoPath)
         self.doTrack = True
     ImageUpdate = pyqtSignal(np.ndarray)
     ResetContent = pyqtSignal()
+    StartLoading = pyqtSignal()
+    StopLoading = pyqtSignal()
+
     def run(self):
         self.ThreadActive = True
         frame_rate = 60
@@ -27,6 +31,10 @@ class Worker1(QThread):
                 ret = True if (frame is not None) else False
                 prev=time()
                 if ret:
+                    #test
+                    if self.MainWindow.loading.state()==2:
+                        sleep(1)
+                        self.StopLoading.emit()
                     self.ImageUpdate.emit(frame)
                 else:
                     self.ResetContent.emit()

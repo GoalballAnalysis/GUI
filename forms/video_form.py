@@ -30,7 +30,7 @@ class Ui_MainWindow(object):
         self.forwardButton =  QtWidgets.QPushButton(self.centralwidget)
         self.forwardButton.setGeometry(QtCore.QRect(320, 9, 80, 34))
         self.forwardButton.setText("Open Video")
-        self.forwardButton.clicked.connect(lambda: MainWindow.startVideoWorker())
+        self.forwardButton.clicked.connect(lambda: MainWindow.openVideo())
         ##################################
         self.rewindButton = QtWidgets.QPushButton(self.centralwidget)
         self.rewindButton.setGeometry(QtCore.QRect(1240, 550, 80, 24))

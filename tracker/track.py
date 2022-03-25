@@ -230,7 +230,6 @@ def process_frame(tracker, show=False):
 
                         c = int(cls)  # integer class
                         label = f'{id} {tracker.names[c]} {conf:.2f}'
-                        print(label)
                         if 'Ball' in label:
                             ball = bboxes
                         else:
@@ -250,8 +249,6 @@ def process_frame(tracker, show=False):
             
             if tracker.opt.show_vid:                
                 if show:
-                    cv2.imshow(str(p), im0)
-                    draw_line(im0, str(p))
                     cv2.imshow(str(p), im0)
                 else:
                     return im0
