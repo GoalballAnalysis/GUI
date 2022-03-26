@@ -105,6 +105,7 @@ class VideoScreen(QMainWindow):
         
         elif self.FeedLabel.pixmap() and (event.button() == QtCore.Qt.RightButton):
             self.courtPoints=[]
+            self.Worker1.courtPoints = []
 
     # when video ends
     def resetContent(self):
@@ -114,12 +115,21 @@ class VideoScreen(QMainWindow):
 
     def drawLines(self, image):
         #print(image.shape)
+        first = []
+        second = []
+        other = []
+        for i in self.courtPoints[1:]:
+            if self.courtPoints[0][1] - 40 < i[1] < self.courtPoints[0][1] + 40:
+                first = i
+            elif  self.courtPoints[0][0] - 240 <i[0] < self.courtPoints[0][0] + 240:
+                second = i
+            else:
+                other = i
         if len(self.courtPoints) == 4:
-            color = (255,0,0)
-            cv2.line(image, self.courtPoints[0], self.courtPoints[1], color, 2)
-            cv2.line(image, self.courtPoints[1], self.courtPoints[2], color, 2)
-            cv2.line(image, self.courtPoints[2], self.courtPoints[3], color, 2)
-            cv2.line(image, self.courtPoints[0], self.courtPoints[3], color, 2)
+            cv2.line(image, self.courtPoints[0], first, (255,0,0), 2)
+            cv2.line(image, self.courtPoints[0], second, (255,0,0), 2)
+            cv2.line(image, other, first, (255,0,0), 2)
+            cv2.line(image, other, second, (255,0,0), 2)
         return image
 
     def openVideo(self):
@@ -153,7 +163,7 @@ class VideoScreen(QMainWindow):
             pass
 
     def startVideoWorker(self):
-        self.Worker1 = Worker1(self.videoPath, self)
+        self.Worker1 = Worker1(self.videoPath, self, self.courtPoints)
         self.Worker1.start()
         self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
         self.Worker1.ResetContent.connect(self.resetContent)

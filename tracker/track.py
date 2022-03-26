@@ -131,16 +131,31 @@ def initialize(opt, cap):
 
 
 
-def findBoudry(point, f,s,o):
+def resetBoundries():
     global max_x, max_y, min_x, min_y
-    max_x = max(point[0], f[0], s[0] , o[0])
-    min_x = min(point[0], f[0], s[0] , o[0])
-    max_y = max(point[1], f[1], s[1] , o[1])
-    min_y = min(point[1], f[1], s[1] , o[1])
+    max_x = min_x = max_y = min_y = 0
+
+def findBoudry(points):
+    base = points[0]
+    first = []
+    second = []
+    other = []
+    for i in points[1:]:
+        if base[1] - 40 < i[1] < base[1] + 40:
+            first = i
+        elif  base[0] - 240 <i[0] < base[0] + 240:
+            second = i
+        else:
+            other = i
+    global max_x, max_y, min_x, min_y
+    max_x = max(base[0], first[0], second[0] , other[0])
+    min_x = min(base[0], first[0], second[0] , other[0])
+    max_y = max(base[1], first[1], second[1] , other[1])
+    min_y = min(base[1], first[1], second[1] , other[1])
 
 def check_goal(ball_coords,frame):
     global goal_counter
-    if len(ball_coords)>1:
+    if len(ball_coords)>0:
         ball_center_x = (ball_coords[0] + ball_coords[2]) / 2 
         ball_center_y = (ball_coords[1] + ball_coords[3]) / 2
         # ball_center_y =ball_coords[3]
@@ -153,7 +168,7 @@ def check_goal(ball_coords,frame):
         cv2.line(frame, (ball_coords[0], ball_coords[1]), (ball_coords[2], ball_coords[3]), (229,204,255), 2)
 
 
-def process_frame(tracker, show=False):
+def process_frame(tracker, show=False, courtPoints = None):
     global ball
 
     if tracker.opt.videoRolling:
@@ -251,6 +266,11 @@ def process_frame(tracker, show=False):
                 if show:
                     cv2.imshow(str(p), im0)
                 else:
+                    if len(courtPoints)  == 4:
+                        findBoudry(courtPoints)
+                    else:
+                        resetBoundries()
+                    check_goal(ball,im0)
                     return im0
                 
                 

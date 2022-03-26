@@ -14,10 +14,10 @@ def open_video(path):
     tracker = get_tracker(cap, path)
     return tracker, cap
 
-def main(tracker, doTrack):
+def main(tracker, doTrack, courtPoints):
 
     tracker.opt.doTrack = doTrack
-    frame = process_frame(tracker)
+    frame = process_frame(tracker, courtPoints = courtPoints)
     
     return frame
     
