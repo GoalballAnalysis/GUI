@@ -10,11 +10,12 @@ from time import time, sleep
 import numpy as np
 
 class Worker1(QThread):
-    def __init__(self, videoPath, MainWindow):
+    def __init__(self, videoPath, MainWindow, courtPoints):
         super().__init__()
         self.MainWindow=MainWindow
         self.tracker, self.cap = tracker_utils.open_video(videoPath)
         self.doTrack = True
+        self.courtPoints = courtPoints
     ImageUpdate = pyqtSignal(np.ndarray)
     ResetContent = pyqtSignal()
     StartLoading = pyqtSignal()
@@ -27,7 +28,7 @@ class Worker1(QThread):
         while self.ThreadActive:
             time_elapsed = (time()-prev)
             if time_elapsed > 1./frame_rate:
-                frame = tracker_utils.main(self.tracker, self.doTrack)
+                frame = tracker_utils.main(self.tracker, self.doTrack, self.courtPoints)
                 ret = True if (frame is not None) else False
                 prev=time()
                 if ret:
