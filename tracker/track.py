@@ -136,6 +136,7 @@ def resetBoundries():
     max_x = min_x = max_y = min_y = 0
 
 def findBoudry(points):
+    print(points)
     base = points[0]
     first = []
     second = []
@@ -158,10 +159,15 @@ def check_goal(ball_coords,frame):
     if len(ball_coords)>0:
         ball_center_x = (ball_coords[0] + ball_coords[2]) / 2 
         ball_center_y = (ball_coords[1] + ball_coords[3]) / 2
+        #print("aaa",ball_center_y, max_y + 50, max_y - 50)
+        #print("bool: ",max_y + 50 > ball_center_y > max_y - 50)
+        #print("bbb", min_y - 50 , min_y + 50)
+        #print("bool2: ",min_y - 50 < ball_center_y < min_y + 50)
+        
         # ball_center_y =ball_coords[3]
-        if  max_y + 50 > ball_center_y > max_y - 50:
+        if  max_y + 30 > ball_center_y > max_y - 35:
             goal_counter +=1 
-        if  min_y - 50 < ball_center_y < min_y + 50:
+        elif  min_y - 50 < ball_center_y < min_y + 15:
             goal_counter +=1
         else:
             goal_counter = 0
@@ -235,6 +241,8 @@ def process_frame(tracker, show=False, courtPoints = None):
                 # ball filtering uygulanacak
                 # print(tracker.names)
                 # draw boxes for visualization
+                labels=[]
+                chosen=False
                 if len(outputs) > 0 and tracker.opt.doTrack:
                     for j, (output, conf) in enumerate(zip(outputs, confs)):
                         
@@ -245,11 +253,15 @@ def process_frame(tracker, show=False, courtPoints = None):
 
                         c = int(cls)  # integer class
                         label = f'{id} {tracker.names[c]} {conf:.2f}'
+                        labels.append(tracker.names[c])
                         if 'Ball' in label:
-                            ball = bboxes
-                        else:
-                            ball = []
+                            if not chosen:
+                                ball = bboxes
+                                chosen=True
                         annotator.box_label(bboxes, label, color=colors(c, True))
+                    if "Ball" not in labels:
+                        ball=[]
+
 
             else:
                 tracker.deepsort.increment_ages()
@@ -257,15 +269,22 @@ def process_frame(tracker, show=False, courtPoints = None):
 
             # Stream results
             im0 = annotator.result()
-            check_goal(ball,im0)
-            ###
+            #check_goal(ball,im0)
+            ##
             if goal_counter > 0:
-                print(goal_counter)
+                pass
+                #print(goal_counter)
             
-            if tracker.opt.show_vid:                
+            if tracker.opt.show_vid:   
                 if show:
+
                     cv2.imshow(str(p), im0)
                 else:
+                    cv2.line(im0, (15, max_y - 35),(1115, max_y - 35), (120,134,255), 2)
+                    cv2.line(im0, (15, max_y + 30),(1115, max_y + 30), (120,134,255), 2)
+                    cv2.line(im0, (15, min_y - 50),(1115, min_y - 50), (255,0,0), 2)
+                    cv2.line(im0, (15, min_y + 15),(1115, min_y + 15), (255,0,0), 2)
+
                     if len(courtPoints)  == 4:
                         findBoudry(courtPoints)
                     else:

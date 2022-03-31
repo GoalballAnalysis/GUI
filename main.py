@@ -133,6 +133,12 @@ class VideoScreen(QMainWindow):
         return image
 
     def openVideo(self):
+        # test
+        #self.FeedLabel.clear()
+        if self.FeedLabel.pixmap():
+            self.FeedLabel.pixmap().detach()
+            self.Worker1.terminate()
+
         self.initLoadingGif()
         self.startVideoWorker()
         
@@ -173,8 +179,9 @@ class VideoScreen(QMainWindow):
         
     def ImageUpdateSlot(self, frame):
         # draw court lines
+        
         frame = self.drawLines(frame)
-
+        print(self.courtPoints)
         # convert pyqt version 
         Image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         Image = QImage(Image.data, Image.shape[1], Image.shape[0], QImage.Format_RGB888)
