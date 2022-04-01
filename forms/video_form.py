@@ -31,6 +31,24 @@ class Ui_MainWindow(object):
         self.forwardButton.setGeometry(QtCore.QRect(320, 9, 80, 34))
         self.forwardButton.setText("Open Video")
         self.forwardButton.clicked.connect(lambda: MainWindow.openVideo())
+
+
+        # One Person Tracking Button
+        self.onePersonTrack =  QtWidgets.QPushButton(self.centralwidget)
+        self.onePersonTrack.setGeometry(QtCore.QRect(500, 9, 150, 34))
+        self.onePersonTrack.setText("One Person Track")
+        self.onePersonTrack.setObjectName("onePersonTrack")
+        self.onePersonTrack.clicked.connect(lambda: MainWindow.onePersonTrack())
+
+        # one person tracking reset
+        self.resetOnePersonTrack =  QtWidgets.QPushButton(self.centralwidget)
+        self.resetOnePersonTrack.setGeometry(QtCore.QRect(700, 9, 150, 34))
+        self.resetOnePersonTrack.setText("Reset One Person Track")
+        self.resetOnePersonTrack.setObjectName("resetOnePersonTrack")
+        self.resetOnePersonTrack.setEnabled(False)
+        self.resetOnePersonTrack.clicked.connect(lambda: MainWindow.resetOnePersonTrack())
+
+
         ##################################
         self.rewindButton = QtWidgets.QPushButton(self.centralwidget)
         self.rewindButton.setGeometry(QtCore.QRect(1240, 550, 80, 24))

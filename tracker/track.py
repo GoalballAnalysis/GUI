@@ -47,7 +47,7 @@ goal_counter = 0
 
 class Arguments:
     def __init__(self, source):
-        self.yolo_model = 'best_6.pt'
+        self.yolo_model = '28_03.pt'
         self.deep_sort_model = 'osnet_x0_25'
         self.source = source
         self.output = 'inference/output'
@@ -136,7 +136,6 @@ def resetBoundries():
     max_x = min_x = max_y = min_y = 0
 
 def findBoudry(points):
-    print(points)
     base = points[0]
     first = []
     second = []
@@ -174,8 +173,41 @@ def check_goal(ball_coords,frame):
         cv2.line(frame, (ball_coords[0], ball_coords[1]), (ball_coords[2], ball_coords[3]), (229,204,255), 2)
 
 
-def process_frame(tracker, show=False, courtPoints = None):
+def filterDetections(detections, onePersonTracker):
+    poi = onePersonTracker.pointOfInterest
+    
+    filtered=[]
+    closest = None
+    min_distance = 1000
+    if onePersonTracker.selected:
+        for detection in detections:
+            if detection[5] == 1:
+                coords = detection[:4]
+                mid_x = (coords[0]+coords[2])//2
+                mid_y = (coords[1]+coords[3])//2
+                distance = (((poi[0]-mid_x)**2)+((poi[1]-mid_y)**2))**.5
+                if min_distance>distance:
+                    min_distance=distance
+                    closest=detection
+                    
+                    # update point of interest
+                    onePersonTracker.setPointOfInterest((mid_x, mid_y))
+            else:
+                filtered.append(detection)
+
+
+    filtered.append(closest)
+    return filtered
+
+def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None):
     global ball
+    """
+    onePerson is boolean value 
+    determines whether we track one person or not
+    """
+    if onePersonTracker:
+        onePerson = onePersonTracker.selected
+
 
     if tracker.opt.videoRolling:
         if tracker.opt.counter == 0 and show:
@@ -241,6 +273,12 @@ def process_frame(tracker, show=False, courtPoints = None):
                 # ball filtering uygulanacak
                 # print(tracker.names)
                 # draw boxes for visualization
+
+                # if one person tracking option selected
+                # then filter detections and show only one person
+                if onePerson:
+                    outputs = filterDetections(outputs, onePersonTracker)
+
                 labels=[]
                 chosen=False
                 if len(outputs) > 0 and tracker.opt.doTrack:
@@ -273,7 +311,7 @@ def process_frame(tracker, show=False, courtPoints = None):
             ##
             if goal_counter > 0:
                 pass
-                #print(goal_counter)
+                print(goal_counter)
             
             if tracker.opt.show_vid:   
                 if show:
@@ -290,7 +328,10 @@ def process_frame(tracker, show=False, courtPoints = None):
                     else:
                         resetBoundries()
                     check_goal(ball,im0)
-                    return im0
+                    if goal_counter>=60:
+                        return im0, True
+                    else:
+                        return im0, False
                 
                 
                 key = cv2.waitKey(5)

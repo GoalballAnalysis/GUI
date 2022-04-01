@@ -14,12 +14,15 @@ def open_video(path):
     tracker = get_tracker(cap, path)
     return tracker, cap
 
-def main(tracker, doTrack, courtPoints):
+def main(tracker, doTrack, courtPoints, onePersonTracker):
+    """
+    onePersonTracker is an object of onePersonTracker class
+    """
 
     tracker.opt.doTrack = doTrack
-    frame = process_frame(tracker, courtPoints = courtPoints)
+    frame, goal = process_frame(tracker, courtPoints = courtPoints, onePersonTracker=onePersonTracker)
     
-    return frame
+    return frame, goal
     
 
 

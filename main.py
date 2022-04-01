@@ -4,6 +4,7 @@ from shutil import which
 import sys
 import os
 from tabnanny import check
+from tkinter import N
 
 from matplotlib.pyplot import xlim
 sys.path.append(os.path.join("tracker","yolov5"))
@@ -32,6 +33,25 @@ from time import sleep
 IMAGE_SIZE = (1280, 720)
 GIF_SIZE = (150,150)
 
+class OnePersonTracker:
+    def __init__(self):
+        """
+        # selected person id
+        self.id=None
+        """
+
+        # flag for point selection
+        self.receiving=False
+
+        # flag for selection made or not 
+        self.selected=False
+
+        # point of interest
+        self.pointOfInterest=None
+    
+    def setPointOfInterest(self, poi):
+        self.pointOfInterest=poi
+
 class VideoScreen(QMainWindow):
     __instance = None
     @staticmethod
@@ -41,6 +61,12 @@ class VideoScreen(QMainWindow):
         return VideoScreen.__instance
 
     def __init__(self, parent):
+        # one person tracker
+        self.onePersonTracker=None
+
+        # message box for goal
+        self.goalMessage=None
+
         # point list
         self.courtPoints=[]
 
@@ -73,6 +99,14 @@ class VideoScreen(QMainWindow):
         checkBox.move(checkBox.x()+x_movement, checkBox.y())
 
 
+        # init One Person Tracker Class Object
+        self.onePersonTracker = OnePersonTracker()
+
+        # goal message box
+        self.goalMessage = QMessageBox()
+        self.goalMessage.setText("Goal!!")
+        self.setWindowTitle("Goal Notification Window")
+
         #stylesheet
         self.setStyleSheet(
             """
@@ -102,16 +136,39 @@ class VideoScreen(QMainWindow):
                 if (rel_x>=0) and (rel_y>=0) and (rel_x<x_limit) and (rel_y<y_limit):
                     #print("relative coordinates: ",rel_x, rel_y)
                     self.courtPoints.append((rel_x, rel_y))
-        
+
+            # if receiving poi, set it
+            if self.onePersonTracker.receiving:
+                area = self.FeedLabel
+                parent = area.parent()
+                x_stride = parent.x()
+                y_stride = parent.y()
+                rel_x = event.x()-x_stride
+                rel_y = event.y()-y_stride
+
+                self.onePersonTracker.setPointOfInterest((rel_x, rel_y))
+                # set selected True 
+                self.onePersonTracker.receiving=False
+                self.onePersonTracker.selected=True
+                # reset button to receive another point
+                self.prepareSelection()
+                        
+            
         elif self.FeedLabel.pixmap() and (event.button() == QtCore.Qt.RightButton):
             self.courtPoints=[]
             self.Worker1.courtPoints = []
+        
+
 
     # when video ends
     def resetContent(self):
         print("Reset Content")
         self.StopFeed()
 
+
+    def goalNotification(self):
+        print("Goal!!!")
+        #self.goalMessage.exec_()
 
     def drawLines(self, image):
         #print(image.shape)
@@ -142,6 +199,39 @@ class VideoScreen(QMainWindow):
         self.initLoadingGif()
         self.startVideoWorker()
         
+
+    def prepareSelection(self):
+        button = self.findChildren(QPushButton, "onePersonTrack")[0]
+        if not self.onePersonTracker.selected:
+            # relevant button
+            button.setEnabled(False)
+            button.setText("Select POI")
+        else:
+            button.setEnabled(True)
+            button.setText("One Person Track")
+    
+    def resetOnePersonTrack(self):
+        self.onePersonTracker.setPointOfInterest(None)
+        self.onePersonTracker.selected=False
+        self.onePersonTracker.receiving=False
+
+        button = self.findChildren(QPushButton, "resetOnePersonTrack")[0]
+        button.setEnabled(False)
+
+
+    def onePersonTrack(self):
+        # if another point selected before, reset variables
+        if self.onePersonTracker.pointOfInterest is not None:
+            self.onePersonTracker.selected=False
+            self.onePersonTracker.setPointOfInterest(None)
+
+        self.prepareSelection()
+        self.onePersonTracker.receiving=True
+        self.findChildren(QPushButton, "resetOnePersonTrack")[0].setEnabled(True)
+
+
+        
+
     def initLoadingGif(self):
         self.loading = QMovie("loading.gif")
         
@@ -169,19 +259,19 @@ class VideoScreen(QMainWindow):
             pass
 
     def startVideoWorker(self):
-        self.Worker1 = Worker1(self.videoPath, self, self.courtPoints)
+        self.Worker1 = Worker1(self.videoPath, self, self.courtPoints, self.onePersonTracker)
         self.Worker1.start()
         self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
         self.Worker1.ResetContent.connect(self.resetContent)
         self.Worker1.StartLoading.connect(self.startLoadingGif)
         self.Worker1.StopLoading.connect(self.stopLoadingGif)
+        self.Worker1.GoalNotification.connect(self.goalNotification)
 
         
     def ImageUpdateSlot(self, frame):
         # draw court lines
         
         frame = self.drawLines(frame)
-        print(self.courtPoints)
         # convert pyqt version 
         Image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         Image = QImage(Image.data, Image.shape[1], Image.shape[0], QImage.Format_RGB888)
