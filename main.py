@@ -92,11 +92,11 @@ class VideoScreen(QMainWindow):
         # mouse click configs
         #self.FeedLabel.setStyleSheet("background-color: rgb(255,0,0)")
         self.FeedLabel.parent().resize(*IMAGE_SIZE)
-        x_movement = 150
-        for button in self.findChildren(QPushButton):
-            button.move(button.x()+x_movement, button.y())
-        checkBox = self.findChild(QCheckBox)
-        checkBox.move(checkBox.x()+x_movement, checkBox.y())
+        # x_movement = 150
+        # for button in self.findChildren(QPushButton):
+        #     button.move(button.x()+x_movement, button.y())
+        # checkBox = self.findChild(QCheckBox)
+        # checkBox.move(checkBox.x()+x_movement, checkBox.y())
 
 
         # init One Person Tracker Class Object
@@ -116,6 +116,7 @@ class VideoScreen(QMainWindow):
                 border: 2px solid black;
             }
             """
+            
         )
 
     #mouse click
@@ -168,6 +169,12 @@ class VideoScreen(QMainWindow):
 
     def goalNotification(self):
         print("Goal!!!")
+        if self.ui.goal_label.isVisible() is False:
+            self.ui.changeGoalVisibilty()
+    
+    def stopGoalNotification(self):
+        if self.ui.goal_label.isVisible():
+            self.ui.changeGoalVisibilty()
         #self.goalMessage.exec_()
 
     def drawLines(self, image):
@@ -266,6 +273,7 @@ class VideoScreen(QMainWindow):
         self.Worker1.StartLoading.connect(self.startLoadingGif)
         self.Worker1.StopLoading.connect(self.stopLoadingGif)
         self.Worker1.GoalNotification.connect(self.goalNotification)
+        self.Worker1.StopGoalNotification.connect(self.stopGoalNotification)
 
         
     def ImageUpdateSlot(self, frame):

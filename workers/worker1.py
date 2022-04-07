@@ -22,6 +22,7 @@ class Worker1(QThread):
     StartLoading = pyqtSignal()
     StopLoading = pyqtSignal()
     GoalNotification = pyqtSignal()
+    StopGoalNotification = pyqtSignal()
 
     def run(self):
         self.ThreadActive = True
@@ -33,6 +34,8 @@ class Worker1(QThread):
                 frame, goal = tracker_utils.main(self.tracker, self.doTrack, self.courtPoints, self.onePersonTracker)
                 if goal:
                     self.GoalNotification.emit()
+                else:
+                    self.StopGoalNotification.emit()
                 ret = True if (frame is not None) else False
                 prev=time()
                 if ret:
