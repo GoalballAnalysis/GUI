@@ -76,7 +76,7 @@ class VideoScreen(QMainWindow):
             VideoScreen.__instance = self
         super(VideoScreen, self).__init__()
         self.showMaximized()
-        
+        self.params = None
         self.videoPath = None
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self,parent)
@@ -175,7 +175,6 @@ class VideoScreen(QMainWindow):
     def stopGoalNotification(self):
         if self.ui.goal_label.isVisible():
             self.ui.changeGoalVisibilty()
-        #self.goalMessage.exec_()
 
     def drawLines(self, image):
         #print(image.shape)
@@ -274,7 +273,7 @@ class VideoScreen(QMainWindow):
         self.Worker1.StopLoading.connect(self.stopLoadingGif)
         self.Worker1.GoalNotification.connect(self.goalNotification)
         self.Worker1.StopGoalNotification.connect(self.stopGoalNotification)
-
+        self.Worker1.HyperParameters = self.params
         
     def ImageUpdateSlot(self, frame):
         # draw court lines
@@ -315,6 +314,8 @@ class VideoScreen(QMainWindow):
             self.Worker1.doTrack = (state == QtCore.Qt.Checked)
         else:
             print("işlem yapmak için video seçip ilerleyiniz")
+    def setParameters(self, params):
+        self.params = params
 
 # class IntroWindow(QWidget):
 #     def __init__(self,parent):

@@ -11,11 +11,65 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QLineEdit, QToolButton
 
 
+class SettingScreen(QtWidgets.QDialog):
+    def __init__(self, MainScreen):
+        super().__init__()
+        self.resize(500,500)
+        self.MainScreen = MainScreen
+        self.upperLineAboveLimit = QLineEdit(self)
+        self.upperLineAboveLimit.setGeometry(QtCore.QRect(100, 50, 100, 25))
+        self.upperLineAboveLimitLabel = QtWidgets.QLabel("Upper Line Above Threshold:",self)
+        self.upperLineAboveLimitLabel.setGeometry(QtCore.QRect(5, 50, 100, 25))
+        # self.upperLineAboveLimitLabel.setWordWrap(True)
+        
+        self.upperLineBelowLimitLabel = QLineEdit(self)
+        self.upperLineBelowLimitLabel.setGeometry(QtCore.QRect(100, 100, 100, 25))
+        self.upperLineBelowLimitLabelLabel = QtWidgets.QLabel("Upper Line Below Threshold:",self)
+        self.upperLineBelowLimitLabelLabel.setGeometry(QtCore.QRect(5, 100, 100, 25))
+
+        self.lowerLineAboveLimitLabel = QLineEdit(self)
+        self.lowerLineAboveLimitLabel.setGeometry(QtCore.QRect(100, 150, 100, 25))
+        self.lowerLineAboveLimitLabelLabel = QtWidgets.QLabel("Lower Line Above Threshold:",self)
+        self.lowerLineAboveLimitLabelLabel.setGeometry(QtCore.QRect(5, 150, 100, 25))
+
+        self.lowerLineBelowLimitLabel = QLineEdit(self)
+        self.lowerLineBelowLimitLabel.setGeometry(QtCore.QRect(100, 200, 100, 25))
+        self.lowerLineBelowLimitLabelLabel = QtWidgets.QLabel("Lower Line Below Threshold:",self)
+        self.lowerLineBelowLimitLabelLabel.setGeometry(QtCore.QRect(5, 200, 100, 25))
+
+        self.goalCounterThreshold = QLineEdit(self)
+        self.goalCounterThreshold.setGeometry(QtCore.QRect(100, 250, 100, 25))
+        self.goalCounterThresholdLabel = QtWidgets.QLabel("Goal Counter Threshold:",self)
+        self.goalCounterThresholdLabel.setGeometry(QtCore.QRect(5, 250, 100, 25))
+        
+        self.submitButton = QtWidgets.QPushButton("Submit", self)
+        self.submitButton.setGeometry(QtCore.QRect(100, 450, 50, 25))
+        self.submitButton.clicked.connect(self.setParameters)
+
+        for l in self.findChildren(QtWidgets.QLabel):
+            l.setWordWrap(True)
+
+        for l in self.findChildren(QLineEdit):
+            l.setValidator(QtGui.QIntValidator())   
+
+    def setParameters(self):
+        all_filled = True
+        params = []
+        for l in self.findChildren(QLineEdit):
+            params.append(int(l.text()))
+            if not l.text():
+                all_filled = False
+        if all_filled:
+            self.MainScreen.setParameters(params)
+        else:
+            print("ALL PARAMETERS SHOULD BE SET!") 
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow, parent):
         self.selected_mode = ""
-        self.parent = parent
+        self.parent = MainWindow
         self.mode_selected = False
+        self.dialog = None
         ################################
         MainWindow.setObjectName("MainWindow")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -64,10 +118,6 @@ class Ui_MainWindow(object):
         self.radiobutton4.setGeometry(QtCore.QRect(1200, 9, 150, 34))
         self.radiobutton4.toggled.connect(self.modeSelection)
 
-        # self.mode1_checkbox = QtWidgets.QCheckBox(self.centralwidget)
-        # self.mode1_checkbox.setGeometry(QtCore.QRect(900, 9, 150, 34))
-        # self.mode1_checkbox.setText("Mode 1")
-
         # display stats
         self.logStats = QtWidgets.QTextEdit(self.centralwidget)
         self.logStats.setReadOnly(True)
@@ -112,10 +162,15 @@ class Ui_MainWindow(object):
         self.fastForwardButton.setGeometry(QtCore.QRect(291, 800, 80, 24))
         self.fastForwardButton.setObjectName("pushButton_3")
     
-        self.checkbox = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkbox.setGeometry(QtCore.QRect(410, 800, 160, 24))
-        self.checkbox.setChecked(True)
-        
+        self.track_checkbox = QtWidgets.QCheckBox(self.centralwidget)
+        self.track_checkbox.setGeometry(QtCore.QRect(410, 800, 160, 24))
+        self.track_checkbox.setChecked(True)
+        ###########################################
+        self.adjustHyperParametersButton = QtWidgets.QPushButton(self.centralwidget)
+        self.adjustHyperParametersButton.setGeometry(QtCore.QRect(1806, 0, 90, 24))
+        self.adjustHyperParametersButton.setObjectName("pushButton")
+        self.adjustHyperParametersButton.setText("Set Parameters")
+
         self.forwardToStats = QtWidgets.QPushButton(self.centralwidget)
         self.forwardToStats.setGeometry(QtCore.QRect(1390, 10, 160, 24))
         self.forwardToStats.setObjectName("pushButton")
@@ -142,9 +197,9 @@ class Ui_MainWindow(object):
         self.startStopButton.clicked.connect(MainWindow.StopFeed)
         self.rewindButton.clicked.connect(MainWindow.Backward)
         self.fastForwardButton.clicked.connect(MainWindow.Forward)
-        self.forwardToStats.clicked.connect(lambda: self.goToStats(parent,2))
-        self.checkbox.stateChanged.connect(MainWindow.TrackState)
-
+        self.track_checkbox.stateChanged.connect(MainWindow.TrackState)
+        self.adjustHyperParametersButton.clicked.connect(self.displaySettingsScreen)
+###############################################################################################Methods
     def modeSelection(self):
         radioButton = self.parent.sender()
         if self.mode_selected is False and radioButton.isChecked():
@@ -158,6 +213,10 @@ class Ui_MainWindow(object):
             self.logStats.append(title)
             self.logStats.append("-"*(len(title)+5))
 
+    def displaySettingsScreen(self):
+        dlg = SettingScreen(self.parent)
+        dlg.setWindowTitle("Settings")
+        dlg.exec()
    
     def browseHandler(self, parent):
         self.open_dialog_box(parent)
@@ -187,5 +246,5 @@ class Ui_MainWindow(object):
         self.fastForwardButton.setText(_translate("MainWindow", "İleri"))
         self.startStopButton.setText(_translate("MainWindow", "Başlat/Durdur"))
         self.forwardToStats.setText(_translate("MainWindow", "İstatistik Ekranına Devam Et"))
-        self.checkbox.setText(_translate("MainWindow", "Tracking"))
+        self.track_checkbox.setText(_translate("MainWindow", "Tracking"))
 
