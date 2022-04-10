@@ -15,6 +15,9 @@ class Worker1(QThread):
         self.onePersonTracker=onePersonTracker
         self.MainWindow=MainWindow
         self.tracker, self.cap = tracker_utils.open_video(videoPath)
+
+        # set slider size
+        
         self.doTrack = True
         self.courtPoints = courtPoints
     ImageUpdate = pyqtSignal(np.ndarray)

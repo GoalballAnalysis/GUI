@@ -7,7 +7,11 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QFileDialog, QLineEdit, QToolButton
+from PyQt5.QtWidgets import QFileDialog, QLineEdit, QToolButton, QSlider
+from PyQt5.QtCore import Qt
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
+from PyQt5.QtMultimediaWidgets import QVideoWidget
+
 
 
 class Ui_MainWindow(object):
@@ -47,6 +51,22 @@ class Ui_MainWindow(object):
         self.resetOnePersonTrack.setObjectName("resetOnePersonTrack")
         self.resetOnePersonTrack.setEnabled(False)
         self.resetOnePersonTrack.clicked.connect(lambda: MainWindow.resetOnePersonTrack())
+
+
+        # creating slider
+        self.slider = QSlider(Qt.Horizontal)
+        self.slider.setRange(0,0)
+        self.slider.sliderMoved.connect(lambda: MainWindow.setPosition())
+        #self.slider.setGeometry(350, 1000, 700, 500)
+        self.slider.setWindowTitle("PyQt5 Media Player")
+        self.slider.sliderReleased.connect(lambda : MainWindow.sliderUpdateFrame())
+        self.slider.sliderPressed.connect(lambda : MainWindow.sliderPressedStop())
+        print(self.slider.x(), self.slider.y())
+
+        """
+        self.mediaPlayer = QMediaPlayer(None, QMediaPlayer.VideoSurface)
+        videowidget = QVideoWidget()
+        """
 
 
         ##################################

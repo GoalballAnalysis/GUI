@@ -72,6 +72,7 @@ class Arguments:
 class MyTracker:
     def __init__(self, cap, source):
         self.opt = Arguments(source)
+        self.cap = cap
         self.dataset, self.device, self.model, self.webcam, self.deepsort, self.dt, self.names, self.save_txt, self.show_vid, self.seen, self.doTrack, self.videoRolling = initialize(self.opt, cap)
         self.half=False
 
@@ -284,11 +285,13 @@ def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None
                 if len(outputs) > 0 and tracker.opt.doTrack:
                     for j, (output, conf) in enumerate(zip(outputs, confs)):
                         
-                        bboxes = output[0:4]
+                        try:
+                            bboxes = output[0:4]
+                            id = output[4]
+                            cls = output[5]
+                        except:
+                            continue
                         
-                        id = output[4]
-                        cls = output[5]
-
                         c = int(cls)  # integer class
                         label = f'{id} {tracker.names[c]} {conf:.2f}'
                         labels.append(tracker.names[c])
