@@ -76,7 +76,7 @@ class VideoScreen(QMainWindow):
             VideoScreen.__instance = self
         super(VideoScreen, self).__init__()
         self.showMaximized()
-        
+        self.params = None
         self.videoPath = None
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self,parent)
@@ -94,11 +94,11 @@ class VideoScreen(QMainWindow):
         # mouse click configs
         #self.FeedLabel.setStyleSheet("background-color: rgb(255,0,0)")
         self.FeedLabel.parent().resize(*IMAGE_SIZE)
-        x_movement = 150
-        for button in self.findChildren(QPushButton):
-            button.move(button.x()+x_movement, button.y())
-        checkBox = self.findChild(QCheckBox)
-        checkBox.move(checkBox.x()+x_movement, checkBox.y())
+        # x_movement = 150
+        # for button in self.findChildren(QPushButton):
+        #     button.move(button.x()+x_movement, button.y())
+        # checkBox = self.findChild(QCheckBox)
+        # checkBox.move(checkBox.x()+x_movement, checkBox.y())
 
 
         # init One Person Tracker Class Object
@@ -118,6 +118,7 @@ class VideoScreen(QMainWindow):
                 border: 2px solid black;
             }
             """
+            
         )
 
     #mouse click
@@ -181,7 +182,12 @@ class VideoScreen(QMainWindow):
 
     def goalNotification(self):
         print("Goal!!!")
-        #self.goalMessage.exec_()
+        if self.ui.goal_label.isVisible() is False:
+            self.ui.changeGoalVisibilty()
+    
+    def stopGoalNotification(self):
+        if self.ui.goal_label.isVisible():
+            self.ui.changeGoalVisibilty()
 
     def drawLines(self, image):
         #print(image.shape)
@@ -295,7 +301,8 @@ class VideoScreen(QMainWindow):
         self.Worker1.StartLoading.connect(self.startLoadingGif)
         self.Worker1.StopLoading.connect(self.stopLoadingGif)
         self.Worker1.GoalNotification.connect(self.goalNotification)
-
+        self.Worker1.StopGoalNotification.connect(self.stopGoalNotification)
+        self.Worker1.HyperParameters = self.params
         
     def ImageUpdateSlot(self, frame):
         # draw court lines
@@ -340,6 +347,8 @@ class VideoScreen(QMainWindow):
             self.Worker1.doTrack = (state == QtCore.Qt.Checked)
         else:
             print("işlem yapmak için video seçip ilerleyiniz")
+    def setParameters(self, params):
+        self.params = params
 
 # class IntroWindow(QWidget):
 #     def __init__(self,parent):

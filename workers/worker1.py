@@ -20,22 +20,27 @@ class Worker1(QThread):
         
         self.doTrack = True
         self.courtPoints = courtPoints
+        self.HyperParameters = None
     ImageUpdate = pyqtSignal(np.ndarray)
     ResetContent = pyqtSignal()
     StartLoading = pyqtSignal()
     StopLoading = pyqtSignal()
     GoalNotification = pyqtSignal()
+    StopGoalNotification = pyqtSignal()
 
     def run(self):
         self.ThreadActive = True
         frame_rate = 60
         prev=0
+        print(self.HyperParameters)
         while self.ThreadActive:
             time_elapsed = (time()-prev)
             if time_elapsed > 1./frame_rate:
-                frame, goal = tracker_utils.main(self.tracker, self.doTrack, self.courtPoints, self.onePersonTracker)
+                frame, goal = tracker_utils.main(self.tracker, self.doTrack, self.courtPoints, self.onePersonTracker,self.HyperParameters)
                 if goal:
                     self.GoalNotification.emit()
+                else:
+                    self.StopGoalNotification.emit()
                 ret = True if (frame is not None) else False
                 prev=time()
                 if ret:

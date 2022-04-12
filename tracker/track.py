@@ -154,20 +154,19 @@ def findBoudry(points):
     max_y = max(base[1], first[1], second[1] , other[1])
     min_y = min(base[1], first[1], second[1] , other[1])
 
-def check_goal(ball_coords,frame):
+def check_goal(ball_coords,frame, thresholds):
     global goal_counter
     if len(ball_coords)>0:
         ball_center_x = (ball_coords[0] + ball_coords[2]) / 2 
         ball_center_y = (ball_coords[1] + ball_coords[3]) / 2
-        #print("aaa",ball_center_y, max_y + 50, max_y - 50)
-        #print("bool: ",max_y + 50 > ball_center_y > max_y - 50)
-        #print("bbb", min_y - 50 , min_y + 50)
-        #print("bool2: ",min_y - 50 < ball_center_y < min_y + 50)
+        upLineAbove = thresholds[0]
+        upLineBelow = thresholds[1]
+        lowLineAbove = thresholds[2]
+        lowLineBelow = thresholds[3]
         
-        # ball_center_y =ball_coords[3]
-        if  max_y + 30 > ball_center_y > max_y - 35:
+        if  max_y + lowLineBelow > ball_center_y > max_y - lowLineAbove:
             goal_counter +=1 
-        elif  min_y - 50 < ball_center_y < min_y + 15:
+        elif  min_y - upLineAbove < ball_center_y < min_y + upLineBelow:
             goal_counter +=1
         else:
             goal_counter = 0
@@ -200,8 +199,11 @@ def filterDetections(detections, onePersonTracker):
     filtered.append(closest)
     return filtered
 
-def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None):
+def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None, params=[35, 15, 35, 30, 60]):
     global ball
+
+    if params is None:
+        params=[35, 15, 35, 30, 60]
     """
     onePerson is boolean value 
     determines whether we track one person or not
@@ -330,8 +332,8 @@ def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None
                         findBoudry(courtPoints)
                     else:
                         resetBoundries()
-                    check_goal(ball,im0)
-                    if goal_counter>=60:
+                    check_goal(ball,im0, params[:-1])
+                    if goal_counter>=params[-1]:
                         return im0, True
                     else:
                         return im0, False
