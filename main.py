@@ -129,7 +129,7 @@ class VideoScreen(QMainWindow):
             if len(self.courtPoints) < 4:
                 area = self.FeedLabel
                 parent = area.parent()
-                parent.setStyleSheet("border: 2px solid red;")
+                #parent.setStyleSheet("border: 2px solid red;")
 
                 x_stride = parent.x()
                 y_stride = parent.y()
@@ -217,9 +217,22 @@ class VideoScreen(QMainWindow):
 
         self.initLoadingGif()
         self.startVideoWorker()
+        
 
-        #slider = self.findChildren(QSlider)[0]
-        #slider.setMaximum(int(self.Worker1.cap.get(cv2.CAP_PROP_FRAME_COUNT)))
+        # configuration
+        self.updateButtonsImageSize()
+        
+        
+
+        
+            
+
+    def updateButtonsImageSize(self):
+        # update button sizes and positions according to the video size
+        slider = self.findChild(QSlider)
+        slider.setMaximum(int(self.Worker1.cap.get(cv2.CAP_PROP_FRAME_COUNT)))
+        slider.setGeometry(QRect(10, IMAGE_SIZE[1]+100, IMAGE_SIZE[0], 25))
+        slider.show()
 
     # stop video when slider pressed
     def sliderPressedStop(self):
@@ -228,7 +241,9 @@ class VideoScreen(QMainWindow):
     # slider released event
     def sliderUpdateFrame(self):
         print("slider release")
+        # change current frame
         self.setPosition()
+        # continue thread
         self.Worker1.stop()
         
 
@@ -303,6 +318,10 @@ class VideoScreen(QMainWindow):
         self.Worker1.GoalNotification.connect(self.goalNotification)
         self.Worker1.StopGoalNotification.connect(self.stopGoalNotification)
         self.Worker1.HyperParameters = self.params
+
+        _button = self.findChildren(QPushButton, "pushButton")[0]
+        _button.show()
+        print("button: ",_button.geometry())
         
     def ImageUpdateSlot(self, frame):
         # draw court lines
@@ -315,8 +334,8 @@ class VideoScreen(QMainWindow):
         self.FeedLabel.setPixmap(QPixmap.fromImage(Image))
 
         # update slider
-        #slider = self.findChildren(QSlider)[0]
-        #slider.setValue(slider.sliderPosition()+1)
+        slider = self.findChildren(QSlider)[0]
+        slider.setValue(slider.sliderPosition()+1)
 
         # set QLabel parent widget size
         p_width = self.FeedLabel.pixmap().width()

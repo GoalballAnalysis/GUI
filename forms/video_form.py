@@ -132,6 +132,19 @@ class Ui_MainWindow(object):
         self.logStats.setGeometry(1340, 210, 400, 250)
         #############################
 
+        # creating slider
+        self.slider = QSlider(Qt.Horizontal, self.centralwidget)
+        # add to central widget
+        #self.centralwidget.addWidget(self.slider)
+        self.slider.setRange(0,0)
+        self.slider.sliderMoved.connect(lambda: MainWindow.setPosition())
+        self.slider.setGeometry(QtCore.QRect(10, 800, 700, 60))
+        self.slider.sliderReleased.connect(lambda : MainWindow.sliderUpdateFrame())
+        self.slider.sliderPressed.connect(lambda : MainWindow.sliderPressedStop())
+        self.slider.hide()
+        
+        #print(self.slider.x(), self.slider.y())
+
         # label when a goal is detected 
         self.goal_label = QtWidgets.QLabel(self.centralwidget)
         self.goal_label.setText("GOOOOL")
@@ -155,19 +168,20 @@ class Ui_MainWindow(object):
 
         ##################################
         self.startStopButton = QtWidgets.QPushButton(self.centralwidget)
-        self.startStopButton.setGeometry(QtCore.QRect(10, 800, 160, 24))
+        self.startStopButton.setGeometry(QtCore.QRect(10, 850, 160, 24))
         self.startStopButton.setObjectName("pushButton")
 
-        self.rewindButton = QtWidgets.QPushButton(self.centralwidget)
-        self.rewindButton.setGeometry(QtCore.QRect(210, 800, 80, 24))
-        self.rewindButton.setObjectName("pushButton_2")
-
-        self.fastForwardButton = QtWidgets.QPushButton(self.centralwidget)
-        self.fastForwardButton.setGeometry(QtCore.QRect(291, 800, 80, 24))
-        self.fastForwardButton.setObjectName("pushButton_3")
+        # ileri geri butonları geçici olarak kaldırıldı, geri alınabilir
+        #self.rewindButton = QtWidgets.QPushButton(self.centralwidget)
+        #self.rewindButton.setGeometry(QtCore.QRect(210, 800, 80, 24))
+        #self.rewindButton.setObjectName("pushButton_2")
+#
+        #self.fastForwardButton = QtWidgets.QPushButton(self.centralwidget)
+        #self.fastForwardButton.setGeometry(QtCore.QRect(291, 800, 80, 24))
+        #self.fastForwardButton.setObjectName("pushButton_3")
     
         self.track_checkbox = QtWidgets.QCheckBox(self.centralwidget)
-        self.track_checkbox.setGeometry(QtCore.QRect(410, 800, 160, 24))
+        self.track_checkbox.setGeometry(QtCore.QRect(410, 850, 160, 24))
         self.track_checkbox.setChecked(True)
         ###########################################
         self.adjustHyperParametersButton = QtWidgets.QPushButton(self.centralwidget)
@@ -199,8 +213,8 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.startStopButton.clicked.connect(MainWindow.StopFeed)
-        self.rewindButton.clicked.connect(MainWindow.Backward)
-        self.fastForwardButton.clicked.connect(MainWindow.Forward)
+        #self.rewindButton.clicked.connect(MainWindow.Backward)
+        #self.fastForwardButton.clicked.connect(MainWindow.Forward)
         self.track_checkbox.stateChanged.connect(MainWindow.TrackState)
         self.adjustHyperParametersButton.clicked.connect(self.displaySettingsScreen)
 ###############################################################################################Methods
@@ -246,8 +260,8 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.rewindButton.setText(_translate("MainWindow", "Geri"))
-        self.fastForwardButton.setText(_translate("MainWindow", "İleri"))
+        #self.rewindButton.setText(_translate("MainWindow", "Geri"))
+        #self.fastForwardButton.setText(_translate("MainWindow", "İleri"))
         self.startStopButton.setText(_translate("MainWindow", "Başlat/Durdur"))
         self.forwardToStats.setText(_translate("MainWindow", "İstatistik Ekranına Devam Et"))
         self.track_checkbox.setText(_translate("MainWindow", "Tracking"))
