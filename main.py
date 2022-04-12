@@ -85,7 +85,7 @@ class VideoScreen(QMainWindow):
         self.FeedLabel = QLabel()
         self.VBL.addWidget(self.FeedLabel)
         #slider
-        self.ui.verticalLayout.addWidget(self.ui.slider)
+        #self.ui.verticalLayout.addWidget(self.ui.slider)
         self.videoGiven = self.videoPath is not None
 
         if self.videoPath is not None:
@@ -136,12 +136,12 @@ class VideoScreen(QMainWindow):
                 rel_x = event.x()-x_stride
                 rel_y = event.y()-y_stride
 
-                slider = self.findChildren(QSlider)[0]
-                # slider yüzünden noktalar kayıyor
-                # hata çözümüne bakılacak 
-                print(slider.geometry())
-                print(self.FeedLabel.geometry())
-                print(parent.geometry())
+                #slider = self.findChildren(QSlider)[0]
+                ## slider yüzünden noktalar kayıyor
+                ## hata çözümüne bakılacak 
+                #print(slider.geometry())
+                #print(self.FeedLabel.geometry())
+                #print(parent.geometry())
 
 
                 bottomRight = area.geometry().bottomRight()
@@ -218,8 +218,8 @@ class VideoScreen(QMainWindow):
         self.initLoadingGif()
         self.startVideoWorker()
 
-        slider = self.findChildren(QSlider)[0]
-        slider.setMaximum(int(self.Worker1.cap.get(cv2.CAP_PROP_FRAME_COUNT)))
+        #slider = self.findChildren(QSlider)[0]
+        #slider.setMaximum(int(self.Worker1.cap.get(cv2.CAP_PROP_FRAME_COUNT)))
 
     # stop video when slider pressed
     def sliderPressedStop(self):
@@ -315,8 +315,8 @@ class VideoScreen(QMainWindow):
         self.FeedLabel.setPixmap(QPixmap.fromImage(Image))
 
         # update slider
-        slider = self.findChildren(QSlider)[0]
-        slider.setValue(slider.sliderPosition()+1)
+        #slider = self.findChildren(QSlider)[0]
+        #slider.setValue(slider.sliderPosition()+1)
 
         # set QLabel parent widget size
         p_width = self.FeedLabel.pixmap().width()

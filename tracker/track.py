@@ -292,6 +292,7 @@ def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None
                             id = output[4]
                             cls = output[5]
                         except:
+                            # this part will be executed just for one time right after resetOnePersonTrack button is clicked 
                             continue
                         
                         c = int(cls)  # integer class
