@@ -1,4 +1,5 @@
 
+from logging import warning
 from random import random
 from shutil import which
 import sys
@@ -33,6 +34,38 @@ from time import sleep
 IMAGE_SIZE = (1280, 720)
 GIF_SIZE = (150,150)
 
+# REPLAY VARIABLES
+# 3 secs
+REPLAY_REWIND=5
+# 5 seconds of button duration
+REPLAY_BUTTON_DURATION=5
+#
+
+class ReplayHandler:
+
+    def __init__(self, replayRewind, displayTimeLeft, replayTimeLeft, fps=30):
+        # all variables' units are seconds for now
+        self.is_ready=False
+        self.fps=fps
+        self.replayRewindFrames = replayRewind
+        self.displayTimeLeft = displayTimeLeft
+        self.is_replaying=False
+        self.is_goal=False
+        self.replayTimeLeft = replayTimeLeft
+    
+    def convertSecondsToFrames(self):
+        self.replayRewindFrames=self.replayRewindFrames*self.fps
+        self.displayTimeLeft=self.displayTimeLeft*self.fps
+        self.replayTimeLeft=self.replayTimeLeft*self.fps
+        self.is_ready=True
+
+    def resetVariables(self, replayRewind, displayTimeLeft, replayTimeLeft):
+        self.is_replaying=False
+        self.replayRewindFrames = replayRewind*self.fps
+        self.displayTimeLeft = displayTimeLeft*self.fps
+        self.replayTimeLeft = replayTimeLeft*self.fps
+
+
 class OnePersonTracker:
     def __init__(self):
         """
@@ -64,6 +97,19 @@ class VideoScreen(QMainWindow):
         # one person tracker
         self.onePersonTracker=None
 
+
+        # flag for courtPoints warning text visibility
+        self.pointsSelected=False
+
+
+        # determine replay rewind seconds
+        # assume 30 fps default
+        self.replayHandler = ReplayHandler(
+            replayRewind=REPLAY_REWIND,
+            displayTimeLeft=REPLAY_BUTTON_DURATION,
+            replayTimeLeft=REPLAY_REWIND
+        )
+
         # message box for goal
         self.goalMessage=None
 
@@ -76,7 +122,7 @@ class VideoScreen(QMainWindow):
             VideoScreen.__instance = self
         super(VideoScreen, self).__init__()
         self.showMaximized()
-        self.params = None
+        self.params = [35, 15, 35, 30, 60]
         self.videoPath = None
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self,parent)
@@ -171,6 +217,7 @@ class VideoScreen(QMainWindow):
         elif self.FeedLabel.pixmap() and (event.button() == QtCore.Qt.RightButton):
             self.courtPoints=[]
             self.Worker1.courtPoints = []
+            self.pointsSelected=False
         
 
 
@@ -180,10 +227,36 @@ class VideoScreen(QMainWindow):
         self.StopFeed()
 
 
+    def replayGoal(self):
+        # stop thread for avoid errors
+        self.Worker1.stop()
+        # is goal 
+        self.replayHandler.is_replaying=True
+        # get current frame
+        current_frame = self.Worker1.cap.get(cv2.CAP_PROP_POS_FRAMES)
+        # go back for replay
+        # self.params[-1] is the goal counter threshold value
+        goalThreshold = self.params[-1]
+        rewind = self.replayHandler.replayRewindFrames
+        clickDelay = (REPLAY_BUTTON_DURATION-self.replayHandler.displayTimeLeft)
+        self.Worker1.cap.set(cv2.CAP_PROP_POS_FRAMES, current_frame-(goalThreshold+rewind+clickDelay))
+        # set is_goal false again
+        self.replayHandler.is_goal=False
+        # start thread back
+        self.Worker1.stop()
+
+        # disable replay button
+        replayButton = self.findChildren(QPushButton, "replayButton")[0]
+        replayButton.setEnabled(False)
+
+
+
     def goalNotification(self):
         print("Goal!!!")
         if self.ui.goal_label.isVisible() is False:
             self.ui.changeGoalVisibilty()
+
+        
     
     def stopGoalNotification(self):
         if self.ui.goal_label.isVisible():
@@ -236,13 +309,15 @@ class VideoScreen(QMainWindow):
 
     # stop video when slider pressed
     def sliderPressedStop(self):
-        self.Worker1.stop()
+        if self.Worker1.ThreadActive:
+            self.Worker1.stop()
 
     # slider released event
     def sliderUpdateFrame(self):
         print("slider release")
         # change current frame
         self.setPosition()
+
         # continue thread
         self.Worker1.stop()
         
@@ -324,6 +399,18 @@ class VideoScreen(QMainWindow):
         print("button: ",_button.geometry())
         
     def ImageUpdateSlot(self, frame):
+        # stop workerthread and request for courtpoints from user
+        if len(self.courtPoints) != 4:
+            warningText = self.findChildren(QLabel, "courtWarningText")[0]
+            warningText.show()
+            if self.Worker1.ThreadActive:
+                self.Worker1.stop()
+        if (len(self.courtPoints) == 4) and (not self.pointsSelected):
+            warningText = self.findChildren(QLabel, "courtWarningText")[0]
+            warningText.hide()
+            self.pointsSelected=True
+
+
         # draw court lines
         
         frame = self.drawLines(frame)
@@ -336,6 +423,31 @@ class VideoScreen(QMainWindow):
         # update slider
         slider = self.findChildren(QSlider)[0]
         slider.setValue(slider.sliderPosition()+1)
+
+        # check for replay
+        if self.replayHandler.is_replaying:
+            # replaying now
+            if self.replayHandler.replayTimeLeft != 0:
+                self.replayHandler.replayTimeLeft-=1
+            else:
+                # replay over, continue with normal feed
+
+                # reset attributes
+                self.replayHandler.resetVariables(REPLAY_REWIND, REPLAY_BUTTON_DURATION, REPLAY_REWIND)
+
+
+        if self.replayHandler.is_goal:
+            # replay feature
+            replayButton = self.findChildren(QPushButton, "replayButton")[0]
+            if not replayButton.isEnabled():
+                replayButton.setEnabled(True)    
+            else:
+                if self.replayHandler.displayTimeLeft != 0:
+                    self.replayHandler.displayTimeLeft -= 1
+                else:
+                    self.replayHandler.is_goal=False
+                    replayButton.setEnabled(False)
+
 
         # set QLabel parent widget size
         p_width = self.FeedLabel.pixmap().width()

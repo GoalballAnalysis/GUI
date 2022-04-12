@@ -16,6 +16,13 @@ class Worker1(QThread):
         self.MainWindow=MainWindow
         self.tracker, self.cap = tracker_utils.open_video(videoPath)
 
+
+        # set fps attribute of ReplayHandler class object for replay feature
+        if not self.MainWindow.replayHandler.is_ready:
+            print("fps: ", int(self.cap.get(cv2.CAP_PROP_FPS)))
+            self.MainWindow.replayHandler.fps=int(self.cap.get(cv2.CAP_PROP_FPS))
+            self.MainWindow.replayHandler.convertSecondsToFrames()
+
         # set slider size
         
         self.doTrack = True
@@ -38,6 +45,7 @@ class Worker1(QThread):
             if time_elapsed > 1./frame_rate:
                 frame, goal = tracker_utils.main(self.tracker, self.doTrack, self.courtPoints, self.onePersonTracker,self.HyperParameters)
                 if goal:
+                    self.MainWindow.replayHandler.is_goal=True
                     self.GoalNotification.emit()
                 else:
                     self.StopGoalNotification.emit()

@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import QFileDialog, QLineEdit, QToolButton, QSlider
 from PyQt5.QtCore import Qt
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtMultimediaWidgets import QVideoWidget
+from cv2 import QRCodeDetector
 
 
 
@@ -150,6 +151,29 @@ class Ui_MainWindow(object):
         self.goal_label.setText("GOOOOL")
         self.goal_label.setGeometry(1340, 110, 160, 24)
         self.goal_label.hide()
+
+        # warning text for getting court borders
+        self.getInputLabel = QtWidgets.QLabel(self.centralwidget)
+        self.getInputLabel.setText("Please Select Court Borders")
+        self.getInputLabel.setObjectName("courtWarningText")
+        self.getInputLabel.setGeometry(1340, 160, 160, 50)
+        self.getInputLabel.hide()
+
+        # goal replay button
+        self.replayButton = QtWidgets.QPushButton(self.centralwidget)
+        self.replayButton.setGeometry(QtCore.QRect(1550, 110, 100, 24)) 
+        self.replayButton.setText("Replay")
+        self.replayButton.setObjectName("replayButton")
+        self.replayButton.setEnabled(False)
+        self.replayButton.clicked.connect(lambda: MainWindow.replayGoal())
+        # style="""
+        #             background-color: #3B4FEB;
+        #             color:azure;
+        #             padding: 1%;
+        #             border-radius:10%;
+        #             font-weight:bold;
+        #         """
+        # self.replayButton.setStyleSheet(style)
 
         # One Person Tracking Button
         self.onePersonTrack =  QtWidgets.QPushButton(self.centralwidget)
