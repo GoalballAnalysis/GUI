@@ -36,9 +36,9 @@ GIF_SIZE = (150,150)
 
 # REPLAY VARIABLES
 # 3 secs
-REPLAY_REWIND=5
+REPLAY_REWIND=4
 # 5 seconds of button duration
-REPLAY_BUTTON_DURATION=5
+REPLAY_BUTTON_DURATION=4
 #
 
 class ReplayHandler:
@@ -234,12 +234,22 @@ class VideoScreen(QMainWindow):
         self.replayHandler.is_replaying=True
         # get current frame
         current_frame = self.Worker1.cap.get(cv2.CAP_PROP_POS_FRAMES)
+        print(f"current frame: {current_frame}")
         # go back for replay
         # self.params[-1] is the goal counter threshold value
         goalThreshold = self.params[-1]
         rewind = self.replayHandler.replayRewindFrames
-        clickDelay = (REPLAY_BUTTON_DURATION-self.replayHandler.displayTimeLeft)
-        self.Worker1.cap.set(cv2.CAP_PROP_POS_FRAMES, current_frame-(goalThreshold+rewind+clickDelay))
+        print(f"rewind: {rewind}")
+        print(f"fps: {self.replayHandler.fps}")
+        clickDelay = (REPLAY_BUTTON_DURATION*self.replayHandler.fps-self.replayHandler.displayTimeLeft)
+        print(f"replay duration: {REPLAY_BUTTON_DURATION}, time left: {self.replayHandler.displayTimeLeft}")
+        print(f"clickDelay: {clickDelay}")
+        print(f"sub: {(goalThreshold+rewind+clickDelay)}")
+        new_pos = current_frame-(goalThreshold+rewind+clickDelay)
+        new_pos = new_pos if new_pos > 0 else 0
+        print(f"new pos: {new_pos}")
+        self.Worker1.cap.set(cv2.CAP_PROP_POS_FRAMES, new_pos)
+        print(f"updated pos: {self.Worker1.cap.get(cv2.CAP_PROP_POS_FRAMES)}")
         # set is_goal false again
         self.replayHandler.is_goal=False
         # start thread back
