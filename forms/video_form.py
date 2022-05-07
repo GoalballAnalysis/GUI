@@ -286,7 +286,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         #self.rewindButton.setText(_translate("MainWindow", "Geri"))
         #self.fastForwardButton.setText(_translate("MainWindow", "İleri"))
-        self.startStopButton.setText(_translate("MainWindow", "Başlat/Durdur"))
+        self.startStopButton.setText(_translate("MainWindow", "Start/Stop"))
         self.forwardToStats.setText(_translate("MainWindow", "İstatistik Ekranına Devam Et"))
         self.track_checkbox.setText(_translate("MainWindow", "Tracking"))
 

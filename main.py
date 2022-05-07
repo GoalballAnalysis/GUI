@@ -36,7 +36,7 @@ GIF_SIZE = (150,150)
 
 # REPLAY VARIABLES
 # 3 secs
-REPLAY_REWIND=4
+REPLAY_REWIND=5
 # 5 seconds of button duration
 REPLAY_BUTTON_DURATION=4
 #

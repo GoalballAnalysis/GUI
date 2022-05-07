@@ -47,7 +47,7 @@ goal_counter = 0
 
 class Arguments:
     def __init__(self, source):
-        self.yolo_model = 'best-185-epoch.pt'#'28_03.pt'
+        self.yolo_model = '28_03.pt'#'28_03.pt'
         self.deep_sort_model = 'osnet_x0_25'
         self.source = source
         self.output = 'inference/output'
