@@ -23,6 +23,7 @@ from workers.worker1 import Worker1
 from PyQt5 import QtGui
 import cv2
 from time import sleep
+from datetime import timedelta
 
 
 #ToDo
@@ -158,10 +159,15 @@ class VideoScreen(QMainWindow):
         #stylesheet
         self.setStyleSheet(
             """
-            QLabel {
+            QLabel{
                 opacity:0.1;
                 border-radius:3px;
                 border: 2px solid black;
+            }
+            QLabel#videotime{
+                opacity:0.1;
+                border-radius:none;
+                border: none;
             }
             """
             
@@ -433,6 +439,10 @@ class VideoScreen(QMainWindow):
         # update slider
         slider = self.findChildren(QSlider)[0]
         slider.setValue(slider.sliderPosition()+1)
+        
+        videoTime = self.findChild(QLabel, "videotime")
+        time = str(self.frameToTime(slider.value())).split(".")[0] + "/" + str(self.frameToTime(slider.maximum())).split(".")[0]
+        videoTime.setText(time)
 
         # check for replay
         if self.replayHandler.is_replaying:
@@ -464,27 +474,31 @@ class VideoScreen(QMainWindow):
         p_height = self.FeedLabel.pixmap().height()
         self.FeedLabel.parent().resize(p_width, p_height)
 
+    def frameToTime(self, frame):
+        FPS = 30.0
+        td = timedelta(seconds=(frame / FPS))
+        return td
 
     def StopFeed(self):
-        if self.videoPath is not None:
+        if self.Worker1 is not None:
             self.Worker1.stop()
         else:
             print("işlem yapmak için video seçip ilerleyiniz")
 
     def Forward(self):
-        if self.videoPath is not None:
+        if self.Worker1 is not None:
             self.Worker1.forward()
         else:
             print("işlem yapmak için video seçip ilerleyiniz")
 
     def Backward(self):
-        if self.videoPath is not None:
+        if self.Worker1 is not None:
             self.Worker1.backward()
         else:
             print("işlem yapmak için video seçip ilerleyiniz")
 
     def TrackState(self, state):
-        if self.videoPath is not None:
+        if self.Worker1 is not None:
             self.Worker1.doTrack = (state == QtCore.Qt.Checked)
         else:
             print("işlem yapmak için video seçip ilerleyiniz")

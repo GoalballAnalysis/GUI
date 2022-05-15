@@ -21,28 +21,35 @@ class SettingScreen(QtWidgets.QDialog):
         super().__init__()
         self.resize(500,500)
         self.MainScreen = MainScreen
+        
+        #35, 15, 35, 30, 60 
         self.upperLineAboveLimit = QLineEdit(self)
+        self.upperLineAboveLimit.setPlaceholderText("35") 
         self.upperLineAboveLimit.setGeometry(QtCore.QRect(100, 50, 100, 25))
         self.upperLineAboveLimitLabel = QtWidgets.QLabel("Upper Line Above Threshold:",self)
         self.upperLineAboveLimitLabel.setGeometry(QtCore.QRect(5, 50, 100, 25))
         # self.upperLineAboveLimitLabel.setWordWrap(True)
         
         self.upperLineBelowLimitLabel = QLineEdit(self)
+        self.upperLineBelowLimitLabel.setPlaceholderText("15") 
         self.upperLineBelowLimitLabel.setGeometry(QtCore.QRect(100, 100, 100, 25))
         self.upperLineBelowLimitLabelLabel = QtWidgets.QLabel("Upper Line Below Threshold:",self)
         self.upperLineBelowLimitLabelLabel.setGeometry(QtCore.QRect(5, 100, 100, 25))
 
         self.lowerLineAboveLimitLabel = QLineEdit(self)
+        self.lowerLineAboveLimitLabel.setPlaceholderText("35") 
         self.lowerLineAboveLimitLabel.setGeometry(QtCore.QRect(100, 150, 100, 25))
         self.lowerLineAboveLimitLabelLabel = QtWidgets.QLabel("Lower Line Above Threshold:",self)
         self.lowerLineAboveLimitLabelLabel.setGeometry(QtCore.QRect(5, 150, 100, 25))
 
         self.lowerLineBelowLimitLabel = QLineEdit(self)
+        self.lowerLineBelowLimitLabel.setPlaceholderText("30") 
         self.lowerLineBelowLimitLabel.setGeometry(QtCore.QRect(100, 200, 100, 25))
         self.lowerLineBelowLimitLabelLabel = QtWidgets.QLabel("Lower Line Below Threshold:",self)
         self.lowerLineBelowLimitLabelLabel.setGeometry(QtCore.QRect(5, 200, 100, 25))
 
         self.goalCounterThreshold = QLineEdit(self)
+        self.goalCounterThreshold.setPlaceholderText("60") 
         self.goalCounterThreshold.setGeometry(QtCore.QRect(100, 250, 100, 25))
         self.goalCounterThresholdLabel = QtWidgets.QLabel("Goal Counter Threshold:",self)
         self.goalCounterThresholdLabel.setGeometry(QtCore.QRect(5, 250, 100, 25))
@@ -143,8 +150,12 @@ class Ui_MainWindow(object):
         self.slider.sliderReleased.connect(lambda : MainWindow.sliderUpdateFrame())
         self.slider.sliderPressed.connect(lambda : MainWindow.sliderPressedStop())
         self.slider.hide()
-        
-        #print(self.slider.x(), self.slider.y())
+
+        #video time info
+        self.video_time = QtWidgets.QLabel(self.centralwidget)
+        self.video_time.setObjectName("videotime")
+        self.video_time.setText("11:11:11/554545454")
+        self.video_time.setGeometry(1190, 830, 700, 60)
 
         # label when a goal is detected 
         self.goal_label = QtWidgets.QLabel(self.centralwidget)
