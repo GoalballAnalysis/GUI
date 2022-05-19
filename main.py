@@ -464,14 +464,12 @@ class VideoScreen(QMainWindow):
             replayButton = self.findChildren(QPushButton, "replayButton")[0]
             if not replayButton.isEnabled():
                 replayButton.setEnabled(True) 
-                print("replay button after enabled: ", replayButton.isEnabled())
             else:
                 if self.replayHandler.displayTimeLeft > 0: #!=
                     self.replayHandler.displayTimeLeft -= 1
                 else:
                     self.replayHandler.is_goal=False
                     replayButton.setEnabled(False)
-                    print("replay button after disabled: ", replayButton.isEnabled())
 
 
         # set QLabel parent widget size
