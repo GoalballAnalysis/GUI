@@ -45,6 +45,7 @@ class Worker1(QThread):
             if time_elapsed > 1./frame_rate:
                 frame, goal = tracker_utils.main(self.tracker, self.doTrack, self.courtPoints, self.onePersonTracker,self.HyperParameters)
                 if goal:
+                    print("Goal!!!")
                     self.MainWindow.replayHandler.is_goal=True
                     self.GoalNotification.emit()
                 else:

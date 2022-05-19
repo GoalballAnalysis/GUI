@@ -36,11 +36,11 @@ IMAGE_SIZE = (1280, 720)
 GIF_SIZE = (150,150)
 
 # REPLAY VARIABLES
-# 3 secs
+# 5 secs
 REPLAY_REWIND=5
-# 5 seconds of button duration
+# 4 seconds of button duration
 REPLAY_BUTTON_DURATION=4
-#
+
 
 class ReplayHandler:
 
@@ -271,7 +271,7 @@ class VideoScreen(QMainWindow):
 
 
     def goalNotification(self):
-        print("Goal!!!")
+        #print("Goal!!!")
         if self.ui.goal_label.isVisible() is False:
             self.ui.changeGoalVisibilty()
 
@@ -463,9 +463,9 @@ class VideoScreen(QMainWindow):
             # replay feature
             replayButton = self.findChildren(QPushButton, "replayButton")[0]
             if not replayButton.isEnabled():
-                replayButton.setEnabled(True)    
+                replayButton.setEnabled(True) 
             else:
-                if self.replayHandler.displayTimeLeft != 0:
+                if self.replayHandler.displayTimeLeft > 0: #!=
                     self.replayHandler.displayTimeLeft -= 1
                 else:
                     self.replayHandler.is_goal=False

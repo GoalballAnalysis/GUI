@@ -30,6 +30,11 @@ from yolov5.utils.plots import Annotator, colors
 from deep_sort.utils.parser import get_config
 from deep_sort.deep_sort import DeepSort
 
+# goal notification duration (suggested to be the same as REPLAY_BUTTON_DURATION)
+GOAL_NOTIFICATION_DURATION=4
+# default fps 30
+FPS=30
+
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # yolov5 deepsort root directory
 if str(ROOT) not in sys.path:
@@ -43,6 +48,8 @@ max_x = 0
 min_x = 0
 ball = []
 goal_counter = 0
+
+
 
 
 class Arguments:
@@ -71,6 +78,9 @@ class Arguments:
 
 class MyTracker:
     def __init__(self, cap, source):
+        # goal notification display duration counter (assume 30 fps)
+        self.goal_notification_counter=None
+
         self.opt = Arguments(source)
         self.cap = cap
         self.dataset, self.device, self.model, self.webcam, self.deepsort, self.dt, self.names, self.save_txt, self.show_vid, self.seen, self.doTrack, self.videoRolling = initialize(self.opt, cap)
@@ -200,7 +210,7 @@ def filterDetections(detections, onePersonTracker):
     return filtered
 
 def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None, params=[35, 15, 35, 30, 60]):
-    global ball
+    global ball, goal_counter
 
     #if params is None:
     #    params=[35, 15, 35, 30, 60]
@@ -338,10 +348,32 @@ def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None
                     else:
                         resetBoundries()
                     check_goal(ball, im0, params[:-1])
-                    if goal_counter>=params[-1]:
+
+
+                    # handle goal notification counter
+                    if (tracker.goal_notification_counter is None) and (goal_counter>=params[-1]):
+                        # if counter not initialized and goal counter decided for a goal
+
+                        # we were not reset gol_counter and it was sending goal notification
+                        # more than once to the gui module which controls replay button
+                        # now goal_notification_counter handles the goal notification label
+                        # and returning goal or not depends on it while it starts from 1 
+                        # because we control it right after initialization (that case it can
+                        # not start from 0, it may cause blinking errors on replay button) 
+                        tracker.goal_notification_counter=1
+
+                    if tracker.goal_notification_counter is not None:
+                        tracker.goal_notification_counter+=1
+                        if tracker.goal_notification_counter>=(GOAL_NOTIFICATION_DURATION*FPS): # assume 30 fps
+                            tracker.goal_notification_counter=None
+                            goal_counter=0
+
+
+                    if tracker.goal_notification_counter is not None:
+                        # if frame counter did not pass the limit (GOAL_NOTIFICATION_DURATION)
                         return im0, True
                     else:
-                        return im0, False
+                        return im0, False                        
                 
                 
                 key = cv2.waitKey(5)
