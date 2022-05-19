@@ -47,7 +47,7 @@ goal_counter = 0
 
 class Arguments:
     def __init__(self, source):
-        self.yolo_model = 'best_6.pt'
+        self.yolo_model = '28_03.pt'#'28_03.pt'
         self.deep_sort_model = 'osnet_x0_25'
         self.source = source
         self.output = 'inference/output'
@@ -72,6 +72,7 @@ class Arguments:
 class MyTracker:
     def __init__(self, cap, source):
         self.opt = Arguments(source)
+        self.cap = cap
         self.dataset, self.device, self.model, self.webcam, self.deepsort, self.dt, self.names, self.save_txt, self.show_vid, self.seen, self.doTrack, self.videoRolling = initialize(self.opt, cap)
         self.half=False
 
@@ -153,23 +154,63 @@ def findBoudry(points):
     max_y = max(base[1], first[1], second[1] , other[1])
     min_y = min(base[1], first[1], second[1] , other[1])
 
-def check_goal(ball_coords,frame):
+def check_goal(ball_coords,frame, thresholds):
     global goal_counter
     if len(ball_coords)>0:
         ball_center_x = (ball_coords[0] + ball_coords[2]) / 2 
         ball_center_y = (ball_coords[1] + ball_coords[3]) / 2
-        # ball_center_y =ball_coords[3]
-        if  max_y + 50 > ball_center_y > max_y - 50:
+        upLineAbove = thresholds[0]
+        upLineBelow = thresholds[1]
+        lowLineAbove = thresholds[2]
+        lowLineBelow = thresholds[3]
+        
+        if  max_y + lowLineBelow > ball_center_y > max_y - lowLineAbove:
             goal_counter +=1 
-        if  min_y - 50 < ball_center_y < min_y + 50:
+        elif  min_y - upLineAbove < ball_center_y < min_y + upLineBelow:
             goal_counter +=1
         else:
             goal_counter = 0
         cv2.line(frame, (ball_coords[0], ball_coords[1]), (ball_coords[2], ball_coords[3]), (229,204,255), 2)
 
 
-def process_frame(tracker, show=False, courtPoints = None):
+def filterDetections(detections, onePersonTracker):
+    poi = onePersonTracker.pointOfInterest
+    
+    filtered=[]
+    closest = None
+    min_distance = 1000
+    if onePersonTracker.selected:
+        for detection in detections:
+            if detection[5] == 1:
+                coords = detection[:4]
+                mid_x = (coords[0]+coords[2])//2
+                mid_y = (coords[1]+coords[3])//2
+                distance = (((poi[0]-mid_x)**2)+((poi[1]-mid_y)**2))**.5
+                if min_distance>distance:
+                    min_distance=distance
+                    closest=detection
+                    
+                    # update point of interest
+                    onePersonTracker.setPointOfInterest((mid_x, mid_y))
+            else:
+                filtered.append(detection)
+
+
+    filtered.append(closest)
+    return filtered
+
+def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None, params=[35, 15, 35, 30, 60]):
     global ball
+
+    #if params is None:
+    #    params=[35, 15, 35, 30, 60]
+    """
+    onePerson is boolean value 
+    determines whether we track one person or not
+    """
+    if onePersonTracker:
+        onePerson = onePersonTracker.selected
+
 
     if tracker.opt.videoRolling:
         if tracker.opt.counter == 0 and show:
@@ -235,21 +276,36 @@ def process_frame(tracker, show=False, courtPoints = None):
                 # ball filtering uygulanacak
                 # print(tracker.names)
                 # draw boxes for visualization
+
+                # if one person tracking option selected
+                # then filter detections and show only one person
+                if onePerson:
+                    outputs = filterDetections(outputs, onePersonTracker)
+
+                labels=[]
+                chosen=False
                 if len(outputs) > 0 and tracker.opt.doTrack:
                     for j, (output, conf) in enumerate(zip(outputs, confs)):
                         
-                        bboxes = output[0:4]
+                        try:
+                            bboxes = output[0:4]
+                            id = output[4]
+                            cls = output[5]
+                        except:
+                            # this part will be executed just for one time right after resetOnePersonTrack button is clicked 
+                            continue
                         
-                        id = output[4]
-                        cls = output[5]
-
                         c = int(cls)  # integer class
                         label = f'{id} {tracker.names[c]} {conf:.2f}'
+                        labels.append(tracker.names[c])
                         if 'Ball' in label:
-                            ball = bboxes
-                        else:
-                            ball = []
+                            if not chosen:
+                                ball = bboxes
+                                chosen=True
                         annotator.box_label(bboxes, label, color=colors(c, True))
+                    if "Ball" not in labels:
+                        ball=[]
+
 
             else:
                 tracker.deepsort.increment_ages()
@@ -257,21 +313,35 @@ def process_frame(tracker, show=False, courtPoints = None):
 
             # Stream results
             im0 = annotator.result()
-            check_goal(ball,im0)
-            ###
+            #check_goal(ball,im0)
+            ##
             if goal_counter > 0:
                 print(goal_counter)
             
-            if tracker.opt.show_vid:                
+            if tracker.opt.show_vid:   
                 if show:
+
                     cv2.imshow(str(p), im0)
                 else:
+                    
+                    upLineAbove = params[0]
+                    upLineBelow = params[1]
+                    lowLineAbove = params[2]
+                    lowLineBelow = params[3]
+                    cv2.line(im0, (15, max_y - lowLineAbove),(1115, max_y - lowLineAbove), (120,134,255), 2)
+                    cv2.line(im0, (15, max_y + lowLineBelow),(1115, max_y + lowLineBelow), (120,134,255), 2)
+                    cv2.line(im0, (15, min_y - upLineAbove),(1115, min_y - upLineAbove), (255,0,0), 2)
+                    cv2.line(im0, (15, min_y + upLineBelow),(1115, min_y + upLineBelow), (255,0,0), 2)
+
                     if len(courtPoints)  == 4:
                         findBoudry(courtPoints)
                     else:
                         resetBoundries()
-                    check_goal(ball,im0)
-                    return im0
+                    check_goal(ball, im0, params[:-1])
+                    if goal_counter>=params[-1]:
+                        return im0, True
+                    else:
+                        return im0, False
                 
                 
                 key = cv2.waitKey(5)
