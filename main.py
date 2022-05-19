@@ -95,6 +95,9 @@ class VideoScreen(QMainWindow):
         return VideoScreen.__instance
 
     def __init__(self, parent):
+        # for initial errors
+        self.Worker1=None
+
         # one person tracker
         self.onePersonTracker=None
 
