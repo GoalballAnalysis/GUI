@@ -130,15 +130,26 @@ class Ui_MainWindow(object):
         self.radiobutton4.setGeometry(QtCore.QRect(1200, 9, 150, 34))
         self.radiobutton4.toggled.connect(self.modeSelection)
 
-        # display stats
+        # display stats 
         self.logStats = QtWidgets.QTextEdit(self.centralwidget)
         self.logStats.setReadOnly(True)
         self.logStats.setLineWrapMode(QtWidgets.QTextEdit.LineWrapMode.WidgetWidth)
         self.sb = self.logStats.verticalScrollBar()
         self.sb.setValue(self.sb.maximum())
         self.logStats.append(self.selected_mode)
-        self.logStats.setGeometry(1340, 210, 400, 250)
+        self.logStats.setGeometry(1340, 190, 400, 250)# 210
         #############################
+
+        # 10 px difference between stats display and 2d map
+
+        # 2d map field
+        # 400,500
+        self.birdEyeView=QtWidgets.QLabel(self.centralwidget)
+        self.birdEyeView.setGeometry(QtCore.QRect(QtCore.QPoint(1340, 450), QtCore.QSize(400,500)))
+        self.birdEyeView.setStyleSheet("border: 1px solid black;")
+        self.birdEyeView.setObjectName("birdEyeView")
+        
+
 
         # creating slider
         self.slider = QSlider(Qt.Horizontal, self.centralwidget)
@@ -164,10 +175,11 @@ class Ui_MainWindow(object):
         self.goal_label.hide()
 
         # warning text for getting court borders
+        # bottom of this component is start point of stats display component 'logStats'
         self.getInputLabel = QtWidgets.QLabel(self.centralwidget)
         self.getInputLabel.setText("Please Select Court Borders")
         self.getInputLabel.setObjectName("courtWarningText")
-        self.getInputLabel.setGeometry(1340, 160, 160, 50)
+        self.getInputLabel.setGeometry(1340, 140, 160, 50)
         self.getInputLabel.hide()
 
         # goal replay button

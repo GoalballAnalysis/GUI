@@ -29,6 +29,8 @@ from yolov5.utils.torch_utils import select_device, time_sync
 from yolov5.utils.plots import Annotator, colors
 from deep_sort.utils.parser import get_config
 from deep_sort.deep_sort import DeepSort
+from workers.birdEyeWorker import BirdEyeWorker
+
 
 # goal notification duration (suggested to be the same as REPLAY_BUTTON_DURATION)
 GOAL_NOTIFICATION_DURATION=4
@@ -54,7 +56,7 @@ goal_counter = 0
 
 class Arguments:
     def __init__(self, source):
-        self.yolo_model = '28_03.pt'#'28_03.pt'
+        self.yolo_model = 'best-185-epoch.pt'#'28_03.pt'
         self.deep_sort_model = 'osnet_x0_25'
         self.source = source
         self.output = 'inference/output'
@@ -78,13 +80,19 @@ class Arguments:
 
 class MyTracker:
     def __init__(self, cap, source):
+
         # goal notification display duration counter (assume 30 fps)
         self.goal_notification_counter=None
+        self.bird_eye_worker=None
 
         self.opt = Arguments(source)
         self.cap = cap
         self.dataset, self.device, self.model, self.webcam, self.deepsort, self.dt, self.names, self.save_txt, self.show_vid, self.seen, self.doTrack, self.videoRolling = initialize(self.opt, cap)
         self.half=False
+
+    def init_bird_eye(self, courtPoints):
+        self.bird_eye_worker=BirdEyeWorker(courtPoints)
+        
 
 
 def initialize(opt, cap):
@@ -212,6 +220,12 @@ def filterDetections(detections, onePersonTracker):
 def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None, params=[35, 15, 35, 30, 60]):
     global ball, goal_counter
 
+    # initialize bird eye if not yet
+    if len(courtPoints)>0 and (tracker.bird_eye_worker is None):
+        print(f"court points: {courtPoints}")
+        tracker.init_bird_eye(courtPoints)
+
+
     #if params is None:
     #    params=[35, 15, 35, 30, 60]
     """
@@ -292,6 +306,8 @@ def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None
                 if onePerson:
                     outputs = filterDetections(outputs, onePersonTracker)
 
+                
+
                 labels=[]
                 chosen=False
                 if len(outputs) > 0 and tracker.opt.doTrack:
@@ -316,6 +332,12 @@ def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None
                     if "Ball" not in labels:
                         ball=[]
 
+
+                # bird eye viewing creation
+                bird_eye_frame=None
+                # bird eye view filtering part
+                if tracker.bird_eye_worker is not None:
+                    bird_eye_frame=tracker.bird_eye_worker.bird_eye_view(outputs)
 
             else:
                 tracker.deepsort.increment_ages()
@@ -368,12 +390,14 @@ def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None
                             tracker.goal_notification_counter=None
                             goal_counter=0
 
+                    if bird_eye_frame is None:
+                        bird_eye_frame=BirdEyeWorker.read_image()
 
                     if tracker.goal_notification_counter is not None:
                         # if frame counter did not pass the limit (GOAL_NOTIFICATION_DURATION)
-                        return im0, True
+                        return (im0, bird_eye_frame), True
                     else:
-                        return im0, False                        
+                        return (im0, bird_eye_frame), False                        
                 
                 
                 key = cv2.waitKey(5)
