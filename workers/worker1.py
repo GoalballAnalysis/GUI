@@ -28,12 +28,15 @@ class Worker1(QThread):
         self.doTrack = True
         self.courtPoints = courtPoints
         self.HyperParameters = None
-    ImageUpdate = pyqtSignal(np.ndarray)
+    ImageUpdate = pyqtSignal(np.ndarray, np.ndarray)
     ResetContent = pyqtSignal()
     StartLoading = pyqtSignal()
     StopLoading = pyqtSignal()
     GoalNotification = pyqtSignal()
     StopGoalNotification = pyqtSignal()
+
+    # bird eye view test
+    BirdEyeViewCreator=pyqtSignal()
 
     def run(self):
         self.ThreadActive = True
@@ -43,7 +46,8 @@ class Worker1(QThread):
         while self.ThreadActive:
             time_elapsed = (time()-prev)
             if time_elapsed > 1./frame_rate:
-                frame, goal = tracker_utils.main(self.tracker, self.doTrack, self.courtPoints, self.onePersonTracker,self.HyperParameters)
+                frames, goal = tracker_utils.main(self.tracker, self.doTrack, self.courtPoints, self.onePersonTracker,self.HyperParameters)
+                frame, bird_eye_frame=frames
                 if goal:
                     print("Goal!!!")
                     self.MainWindow.replayHandler.is_goal=True
@@ -57,7 +61,9 @@ class Worker1(QThread):
                     if self.MainWindow.loading.state()==2:
                         sleep(1)
                         self.StopLoading.emit()
-                    self.ImageUpdate.emit(frame)
+                    
+                    # also pass bird eye view to update slot to update gui with bird eye
+                    self.ImageUpdate.emit(frame, bird_eye_frame)
                 else:
                     self.ResetContent.emit()
             

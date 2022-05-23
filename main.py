@@ -24,6 +24,7 @@ from PyQt5 import QtGui
 import cv2
 from time import sleep
 from datetime import timedelta
+from workers.birdEyeWorker import BirdEyeWorker
 
 
 #ToDo
@@ -34,6 +35,7 @@ from datetime import timedelta
 # reverse of image size
 IMAGE_SIZE = (1280, 720)
 GIF_SIZE = (150,150)
+BIRD_EYE_VIEW_SIZE=(400,500)
 
 # REPLAY VARIABLES
 # 5 secs
@@ -377,7 +379,7 @@ class VideoScreen(QMainWindow):
         
 
     def initLoadingGif(self):
-        self.loading = QMovie("loading.gif")
+        self.loading = QMovie("assets/loading.gif")
         
         #resize qlabel
         self.FeedLabel.setMovie(self.loading)
@@ -413,11 +415,12 @@ class VideoScreen(QMainWindow):
         self.Worker1.StopGoalNotification.connect(self.stopGoalNotification)
         self.Worker1.HyperParameters = self.params
 
+
         _button = self.findChildren(QPushButton, "pushButton")[0]
         _button.show()
         print("button: ",_button.geometry())
         
-    def ImageUpdateSlot(self, frame):
+    def ImageUpdateSlot(self, frame, bird_eye_frame):
         # stop workerthread and request for courtpoints from user
         if len(self.courtPoints) != 4:
             warningText = self.findChildren(QLabel, "courtWarningText")[0]
@@ -438,6 +441,15 @@ class VideoScreen(QMainWindow):
         Image = QImage(Image.data, Image.shape[1], Image.shape[0], QImage.Format_RGB888)
         #Pic = ConvertToQtFormat.scaled(1200, 840, Qt.KeepAspectRatio)
         self.FeedLabel.setPixmap(QPixmap.fromImage(Image))
+
+        # update bird_eye_view
+        if bird_eye_frame is not None:
+            bird_eye_frame=cv2.resize(bird_eye_frame, BIRD_EYE_VIEW_SIZE)
+            bird_eye_frame=cv2.cvtColor(bird_eye_frame, cv2.COLOR_BGR2RGB)
+            bird_eye_image=QImage(bird_eye_frame.data, bird_eye_frame.shape[1], bird_eye_frame.shape[0], QImage.Format_RGB888)
+            bird_eye_view=self.findChild(QLabel, "birdEyeView")
+            bird_eye_view.setPixmap(QPixmap.fromImage(bird_eye_image))
+
 
         # update slider
         slider = self.findChildren(QSlider)[0]

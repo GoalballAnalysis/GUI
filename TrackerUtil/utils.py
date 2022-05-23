@@ -1,4 +1,5 @@
 from tkinter.messagebox import NO
+from traceback import FrameSummary
 import numpy as np
 import cv2
 from time import sleep
@@ -20,9 +21,9 @@ def main(tracker, doTrack, courtPoints, onePersonTracker, params):
     """
 
     tracker.opt.doTrack = doTrack
-    frame, goal = process_frame(tracker, courtPoints = courtPoints, onePersonTracker=onePersonTracker, params = params)
+    frames, goal = process_frame(tracker, courtPoints = courtPoints, onePersonTracker=onePersonTracker, params = params)
     
-    return frame, goal
+    return frames, goal
     
 
 
