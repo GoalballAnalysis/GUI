@@ -226,8 +226,8 @@ def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None
         tracker.init_bird_eye(courtPoints)
 
 
-    #if params is None:
-    #    params=[35, 15, 35, 30, 60]
+    if params is None:
+        params=[35, 15, 35, 30, 60]
     """
     onePerson is boolean value 
     determines whether we track one person or not
@@ -333,6 +333,9 @@ def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None
                         ball=[]
 
 
+                """
+                Bird Eye View Image initialization
+                """
                 # bird eye viewing creation
                 bird_eye_frame=None
                 # bird eye view filtering part
@@ -390,6 +393,8 @@ def process_frame(tracker, show=False, courtPoints = None, onePersonTracker=None
                             tracker.goal_notification_counter=None
                             goal_counter=0
 
+
+                    # set bird eye view image as base court image if it is None
                     if bird_eye_frame is None:
                         bird_eye_frame=BirdEyeWorker.read_image()
 

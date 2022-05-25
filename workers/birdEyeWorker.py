@@ -1,4 +1,5 @@
 
+from types import new_class
 import cv2
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -14,12 +15,28 @@ HEIGHT=800 # with goals included 914
 STRIDE_X=201 
 STRIDE_Y=101
 
+# court border coordinates on bird eye view image for filtering points
+COURT_IMAGE_TOP_LEFT=(202, 101)
+COURT_IMAGE_BOTTOM_RIGHT=(601, 901)
+
+# borders included goals for ball filtering
+COURT_IMAGE_GOALS_TOP_LEFT=(201, 43)
+COURT_IMAGE_GOALS_BOTTOM_RIGHT=(601, 959)
+
 class BirdEyeWorker(): #QThread
     def __init__(self, courtPoints):
         #super().__init__()
         # sort court points to be used in edge conditions
         courtPoints=self.sort_court_points(courtPoints)
 
+        """
+        courtPoints=[
+            [0,0],
+            [1280, 0],
+            [0, 720],
+            [1280, 720]
+        ]
+        """
         self.courtPoints=np.float32(courtPoints)
         self.original_image=BirdEyeWorker.read_image()
         self.updatable_image=self.original_image.copy()
@@ -41,18 +58,19 @@ class BirdEyeWorker(): #QThread
         [x_2, x_3, x_1, x_4]
         [y_2, y_1, y_4, y_3]
         """
-        print(f"before sort: {courtPoints}")
         courtPoints=sorted(courtPoints, key = lambda x: x[0])
         courtPoints=[courtPoints[1], courtPoints[2], courtPoints[0], courtPoints[3]]
-        print(f"after sort: {courtPoints}")
         return courtPoints
 
-    def draw_on_pitch(self, image, point, color):
+    def convert_pitch_size(self, point):
         point=(
             point[0]+STRIDE_X,
             point[1]+STRIDE_Y
         )
-        image=cv2.circle(image, point, 2, color, 2)
+        return point
+
+    def draw_on_pitch(self, image, point, color):
+        image=cv2.circle(image, point, 3, color, 3)
         return image
 
     def convert_point(self, point):
@@ -85,12 +103,60 @@ class BirdEyeWorker(): #QThread
         """
         x_= (bbox[0]+bbox[2])//2
         y_= max(bbox[1], bbox[3])
-        return (x_, y_)
+        return (x_, y_), (bbox[-1] == 0)
 
+
+    def filter_points(self, point, is_ball):
+        # filter points according to their position (points in court will be filtered)
+        # assign players to a different teams
+        # 0 for team1, 1 for team2 and returns -1 for ball
+        x_min, x_max, y_min, y_max= None, None, None, None
+
+        if is_ball:
+            """
+            COURT_IMAGE_GOALS_TOP_LEFT=(201, 43)
+            COURT_IMAGE_GOALS_BOTTOM_RIGHT=(601, 959)
+            """
+            x_max=max(COURT_IMAGE_GOALS_TOP_LEFT[0], COURT_IMAGE_GOALS_BOTTOM_RIGHT[0])
+            x_min=min(COURT_IMAGE_GOALS_TOP_LEFT[0], COURT_IMAGE_GOALS_BOTTOM_RIGHT[0])
+            y_max=max(COURT_IMAGE_GOALS_TOP_LEFT[1], COURT_IMAGE_GOALS_BOTTOM_RIGHT[1])
+            y_min=min(COURT_IMAGE_GOALS_TOP_LEFT[1], COURT_IMAGE_GOALS_BOTTOM_RIGHT[1])
+
+        else:
+            """
+            COURT_IMAGE_TOP_LEFT=(202, 101)
+            COURT_IMAGE_BOTTOM_RIGHT=(601, 901)
+            """
+            x_max=max(COURT_IMAGE_TOP_LEFT[0], COURT_IMAGE_BOTTOM_RIGHT[0])
+            x_min=min(COURT_IMAGE_TOP_LEFT[0], COURT_IMAGE_BOTTOM_RIGHT[0])
+            y_max=max(COURT_IMAGE_TOP_LEFT[1], COURT_IMAGE_BOTTOM_RIGHT[1])
+            y_min=min(COURT_IMAGE_TOP_LEFT[1], COURT_IMAGE_BOTTOM_RIGHT[1])
+
+        is_inside=False
+
+        if (point[0]<=x_max and point[0]>=x_min) and (point[1]<=y_max and point[1]>=y_min):
+            # inside borders
+            is_inside=True
+    
+        team=None
+        center_y=(y_min+y_max)//2
+
+        if is_ball:
+            team=-1
+        else:
+            if point[1] > center_y:
+                team=1
+            elif point[1] <= center_y:
+                team=0
+
+        return (is_inside, team)
 
     def bird_eye_view(self, points):
         self.reset_updatable()
+        
         """     
+        # static points for test 
+
         points=[
             [578,211],
             [613,214],
@@ -108,16 +174,27 @@ class BirdEyeWorker(): #QThread
             [596, 324] # center
         ]
         """
-        color=(255,0,0)
+
+        colors=[
+            (255,0,0),
+            (0,0,255),
+            (255,255,255)
+        ]
         for point in points:
-            is_ball=point[-1]==0
-            point=self.bbox2point(point)
+            # convert deepsort tracker bbox coordinates to standard bbox coordinates
+            point, is_ball=self.bbox2point(point)
+            
+            # apply perspective projection on points
             new_point=self.convert_point(point)
-            print(new_point)
-            """
-            if is_ball:
-                color=(0, 255, 0)
-            """
+            
+            new_point=self.convert_pitch_size(new_point)
+            # filter points according to their position on pitch
+            passed, team=self.filter_points(new_point, is_ball)
+            if not passed:
+                continue
+            
+            color=colors[team]
+
             self.updatable_image=self.draw_on_pitch(self.updatable_image, new_point, color)
 
         return self.updatable_image
